@@ -15,7 +15,7 @@ phases:
       - python3 values-gen.py
       - cat main-chart/values.json
       - export VPC_ID=$(jq -r '.vpcId' main-chart/values.json)
-      - echo "VPC_ID: $VPC_ID"
+      - echo VPC_ID=$VPC_ID
       - helm repo add external-secrets https://charts.external-secrets.io
       - helm repo add eks https://aws.github.io/eks-charts
       - helm repo update
