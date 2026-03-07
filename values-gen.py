@@ -34,7 +34,7 @@ for key in keys_to_extract:
     try:
         values[key] = os.environ[upper_snake_key]
     except KeyError:
-        print(f"Warning: {upper_snake_key} not found in tf_outputs.json")
+        print(f"Warning: {upper_snake_key} not found in environment variables.")
 
 values["repositories"] = []
 rds_name_map_key = f"{values['environment']}_rds_secret_name_map"
