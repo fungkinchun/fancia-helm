@@ -19,6 +19,8 @@ phases:
       - echo VPC_ID=$VPC_ID
       - helm repo add external-secrets https://charts.external-secrets.io
       - helm repo add eks https://aws.github.io/eks-charts
+      - helm repo add jetstack https://charts.jetstack.io
+      - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
       - helm repo update
       - helm upgrade --install external-secrets external-secrets/external-secrets --namespace $PROJECT_NAME --set installCRDs=true
       - |
@@ -31,4 +33,9 @@ phases:
           --set serviceAccount.create=true \
           --set serviceAccount.name=aws-load-balancer-controller \
           --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$ENVIRONMENT-$PROJECT_NAME-alb-controller-role
+          --set enableCertManager=true
+      - echo Installing certifcate related helm charts...
+      - helm install cert-manager jetstack/cert-manager --namespace $PROJECT_NAME --set crds.enabled=true
+      - helm install aws-privateca-issuer awspca/aws-privateca-issuer --namespace $PROJECT_NAME
+
       - helm upgrade --install $PROJECT_NAME ./main-chart --namespace $PROJECT_NAME
