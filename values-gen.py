@@ -5,6 +5,14 @@ def snake_to_camel(s: str) -> str:
     parts = s.split('_')
     return parts[0].lower() + ''.join(p.capitalize() for p in parts[1:]) if parts else s
 
+def camel_to_snake(s: str) -> str:
+    result = []
+    for char in s:
+        if char.isupper() and result:
+            result.append('_')
+        result.append(char.lower())
+    return ''.join(result)
+
 def upper_snake_to_camel(s: str) -> str:
     parts = s.split('_')
     return ''.join(p.capitalize() for p in parts) if parts else s
@@ -17,6 +25,8 @@ def camel_to_upper_snake(s: str) -> str:
         result.append(char.upper())
     return ''.join(result)
 
+
+
 try:
     with open('tf_outputs.json', 'r') as f:
         tf_outputs = json.load(f)
@@ -28,13 +38,18 @@ except json.JSONDecodeError:
     exit(1)
 
 values = {}
-keys_to_extract = ['environment', 'projectName', 'awsAccountId', 'awsRegion']
+keys_to_extract = ['environment', 'projectName', 'awsAccountId', 'awsRegion', 'vpcId']
 for key in keys_to_extract:
     upper_snake_key = camel_to_upper_snake(key)
     try:
         values[key] = os.environ[upper_snake_key]
     except KeyError:
-        print(f"Warning: {upper_snake_key} not found in environment variables.")
+        try:
+            snake_key = camel_to_snake(key)
+            values[key] = tf_outputs[snake_key]['value']
+        except KeyError:
+            print(f"Warning: {upper_snake_key} not found in environment variables.")
+
 
 values["repositories"] = []
 rds_name_map_key = f"{values['environment']}_rds_secret_name_map"
