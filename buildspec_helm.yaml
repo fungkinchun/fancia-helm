@@ -11,10 +11,7 @@ phases:
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
   build:
     commands:
-      - ls
-      - ls $CODEBUILD_SRC_DIR_tf_apply_output
       - cp $CODEBUILD_SRC_DIR_tf_apply_output/tf_outputs.json .
       - python3 values-gen.py
       - cat main-chart/values.json
-      - helm upgrade --install $PROJECT_NAME ./main-chart \
-          --namespace $PROJECT_NAME
+      - helm upgrade --install $PROJECT_NAME ./main-chart --namespace $PROJECT_NAME
