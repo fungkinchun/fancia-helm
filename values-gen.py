@@ -37,6 +37,8 @@ except json.JSONDecodeError:
     print("Error decoding tf_outputs.json.")
     exit(1)
 
+print(tf_outputs)
+
 values = {}
 keys_to_extract = ['environment', 'projectName', 'awsAccountId', 'awsRegion']
 for key in keys_to_extract:
