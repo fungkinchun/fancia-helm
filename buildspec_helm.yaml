@@ -6,6 +6,7 @@ phases:
       - chmod +x kubectl
       - mv kubectl /usr/local/bin/kubectl
       - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - pip install pyyaml
   pre_build:
     commands:
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME

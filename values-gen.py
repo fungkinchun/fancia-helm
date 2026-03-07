@@ -1,4 +1,5 @@
 import json
+import yaml
 import os
 
 def snake_to_camel(s: str) -> str:
@@ -74,3 +75,8 @@ json_output = json.dumps(values, indent=2)
 with open('./main-chart/values.json', 'w') as f:
     f.write(json_output)
 print("values.json generated successfully.")
+
+yaml_output = yaml.dump(values, default_flow_style=False)
+with open('./main-chart/values.yaml', 'w') as f:
+    f.write(yaml_output)
+print("values.yaml generated successfully.")
