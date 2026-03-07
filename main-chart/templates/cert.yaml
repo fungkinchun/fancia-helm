@@ -3,8 +3,8 @@ kind: AWSPCAClusterIssuer
 metadata:
   name: aws-pca-clusterissuer
 spec:
-  arn: {{ $.Values.private_ca_arn }}
-  region: {{ $.Values.region }}
+  arn: { { $.Values.private_ca_arn } }
+  region: { { $.Values.region } }
 
 ---
 apiVersion: cert-manager.io/v1
@@ -13,16 +13,16 @@ metadata:
   name: aws-load-balancer-webhook-cert
   namespace: kube-system
 spec:
-  secretName: aws-load-balancer-webhook-tls 
-  duration: 2160h   
-  renewBefore: 360h 
+  secretName: aws-load-balancer-webhook-tls
+  duration: 2160h
+  renewBefore: 360h
   isCA: false
   privateKey:
     algorithm: RSA
     size: 2048
   dnsNames:
     - aws-load-balancer-webhook-service.kube-system.svc
-    - aws-load-balancer-webhook-service.kube-system.svc.cluster.local 
+    - aws-load-balancer-webhook-service.kube-system.svc.cluster.local
   issuerRef:
     name: aws-pca-clusterissuer
     kind: AWSPCAClusterIssuer
