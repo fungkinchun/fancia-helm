@@ -1,0 +1,72 @@
+{{- range .Values.repositories }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Values.projectName }}
+  labels:
+    env: {{ $.Values.environment }}
+    app: {{ .name }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+     
+    spec:
+      serviceAccountName: {{$.Values.projectName}}-sa
+      containers:
+      - name: {{ .name }}
+        image: {{$.Values.awsAccountId}}.dkr.ecr.{{$.Values.awsRegion}}.amazonaws.com/{{$.Values.projectName}}-backend-{{ .name }}:{{ .imageVersion }}
+        ports:
+        - containerPort: {{ .port }}
+        envFrom:
+        - secretRef:
+            name: {{$.Values.environment}}-{{ .name }}-database 
+        - secretRef:
+            name: {{$.Values.environment}}-{{ .name }}-bucket 
+        - secretRef:
+            name: {{$.Values.environment}}-{{ .name }}-smtp
+        env:
+          - name: AWS_RDS_SECRET_NAME
+            value: {{ .databaseSecretName }}
+          - name: ENV
+            value: {{ $.Values.environment }}
+          - name: PROJECT_NAME
+            value: {{ $.Values.projectName }}
+          - name: REPO_NAME
+            value: {{ .name }}
+          - name: DATABASE_URL
+            value: jdbc-secretsmanager:postgresql://{{ .name }}-rds.{{$.Values.projectName}}.{{$.Values.environment}}:5432/{{$.Values.projectName}}
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: {{ .port }}
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: {{ .port }}
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+{{- end }}

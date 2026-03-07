@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+  namespace: fancia
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/tags: Environment={{ .Values.environment }},Project={{ .Values.projectName }}
+
+spec:
+  ingressClassName: alb
+  rules:
+  - host: {{ .Values.environment }}.{{ .Values.projectName }}.com
+    http:
+      paths:
+      {{- range .Values.repositories }}
+      - path: /{{ .name }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .name }}
+            port:
+              number: {{ .servicePort | default 8080 }}
+      {{- end }}

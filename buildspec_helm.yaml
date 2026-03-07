@@ -1,0 +1,20 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - pip3 install --upgrade awscli
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/kubectl
+      - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+  build:
+    commands:
+      - cp $CODEBUILD_SRC_DIR_tf_apply_output/tf_outputs.json .
+      - python3 values-gen.py
+      - helm upgrade --install $PROJECT_NAME ./main-chart \
+          --namespace $PROJECT_NAME
