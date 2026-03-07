@@ -52,10 +52,11 @@ for key in keys_to_extract:
 env_keys_to_extract = ['defaultVpcId']
 for key in env_keys_to_extract:
     snake_key = camel_to_snake(key)
+    map_key = f"{values['environment']}_{snake_key}"
     try:
-        values[key] = tf_outputs[snake_key]['value']
+        values[key] = tf_outputs[map_key]['value']
     except KeyError:
-        print(f"Warning: {snake_key} not found in tf_outputs.")
+        print(f"Warning: {map_key} not found in tf_outputs.")
 
 values["repositories"] = []
 rds_name_map_key = f"{values['environment']}_rds_secret_name_map"
