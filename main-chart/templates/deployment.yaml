@@ -38,6 +38,8 @@ spec:
         - secretRef:
             name: {{$.Values.environment}}-{{ .name }}-smtp
         env:
+          - name: SERVER_PORT
+            value: "{{ .port }}"
           - name: AWS_RDS_SECRET_NAME
             value: {{ .databaseSecretName }}
           - name: ENV
