@@ -3,7 +3,7 @@ kind: AWSPCAClusterIssuer
 metadata:
   name: aws-pca-clusterissuer
 spec:
-  arn: { { $.Values.private_ca_arn } }
+  arn: { { $.Values.privateCaArn } }
   region: { { $.Values.region } }
 
 ---
