@@ -1,11 +1,23 @@
+{{- range .Values.repositories }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: myapp
+  name: {{ $.Values.projectName }}-{{ .name }}
+  namespace: {{ $.Values.projectName }}
+  labels:
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ .name }}
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: {{ $.Values.projectName }}
 spec:
-  selector:
-    app: myapp
+  type: ClusterIP
   ports:
-  - port: 80
-    targetPort: 8080
-  type: ClusterIP   # later add Ingress / ALB
+    - name: http
+      protocol: TCP
+      port: {{ .port }}
+      targetPort: {{ .port | default 8080 }}
+  selector:
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ .name }}
+{{- end }}
