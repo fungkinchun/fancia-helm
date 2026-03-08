@@ -22,5 +22,5 @@ spec:
           service:
             name: {{ .name }}
             port:
-              number: {{ .servicePort | default 8080 }}
+              number: {{ .port | default 8080 }}
       {{- end }}
