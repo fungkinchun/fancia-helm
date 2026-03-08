@@ -12,6 +12,8 @@ kind: Certificate
 metadata:
   name: aws-load-balancer-webhook-cert
   namespace: kube-system
+  annotations:
+    cert-manager.io/inject-ca-from: kube-system/aws-load-balancer-webhook-cert
 spec:
   secretName: aws-load-balancer-webhook-tls
   duration: 2160h
