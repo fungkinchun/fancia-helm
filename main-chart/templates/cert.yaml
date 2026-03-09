@@ -14,6 +14,7 @@ metadata:
   namespace: kube-system
   annotations:
     cert-manager.io/inject-ca-from: kube-system/aws-load-balancer-webhook-cert
+    cert-manager.io/issuer: aws-pca-clusterissuer
 spec:
   secretName: aws-load-balancer-webhook-tls
   duration: 2160h
