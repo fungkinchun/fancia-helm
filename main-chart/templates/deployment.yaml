@@ -7,7 +7,8 @@ metadata:
   namespace: {{ $.Values.projectName }}
   labels:
     env: {{ $.Values.environment }}
-    app: {{ .name }}
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ $.Values.environment }}
 spec:
   replicas: 1
   strategy:
@@ -17,12 +18,14 @@ spec:
       maxSurge: 1
   selector:
     matchLabels:
-      app: {{ .name }}
+      app.kubernetes.io/name: {{ .name }}
+      app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ $.Values.environment }}
   template:
     metadata:
       labels:
-        app: {{ .name }}
-     
+        app.kubernetes.io/name: {{ .name }}
+        app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ $.Values.environment }}
+
     spec:
       serviceAccountName: {{$.Values.projectName}}-sa
       containers:

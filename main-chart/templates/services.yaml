@@ -7,7 +7,7 @@ metadata:
   namespace: {{ $.Values.projectName }}
   labels:
     app.kubernetes.io/name: {{ .name }}
-    app.kubernetes.io/instance: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ $.Values.environment }}
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/part-of: {{ $.Values.projectName }}
 spec:
@@ -19,5 +19,5 @@ spec:
       targetPort: {{ .port | default 8080 }}
   selector:
     app.kubernetes.io/name: {{ .name }}
-    app.kubernetes.io/instance: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Values.projectName }}-{{ $.Values.environment }}
 {{- end }}
