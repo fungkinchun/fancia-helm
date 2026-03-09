@@ -50,7 +50,7 @@ for key in keys_to_extract:
             values[key] = tf_outputs[snake_key]['value']
         except KeyError:
             print(f"Warning: {upper_snake_key} not found in environment variables.")
-env_keys_to_extract = ['vpcId', 'privateCaArn']
+env_keys_to_extract = ['vpcId', 'privateCaArn', "acmCertificateArn"]
 for key in env_keys_to_extract:
     snake_key = camel_to_snake(key)
     map_key = f"{values['environment']}_{snake_key}"

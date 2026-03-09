@@ -10,7 +10,7 @@ metadata:
     alb.ingress.kubernetes.io/tags: Environment={{ .Values.environment }},Project={{ .Values.projectName }}
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-    
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.acmCertificateArn }}
 spec:
   ingressClassName: alb
   tls:
