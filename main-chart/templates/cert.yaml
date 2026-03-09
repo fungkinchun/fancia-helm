@@ -10,13 +10,10 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: aws-load-balancer-webhook-cert
-  namespace: kube-system
-  annotations:
-    cert-manager.io/inject-ca-from: kube-system/aws-load-balancer-webhook-cert
-    cert-manager.io/issuer: aws-pca-clusterissuer
+  name: {{ $.Values.environment }}-{{ $.Values.projectName }}-tls-cert
+  namespace: {{ $.Values.projectName }}
 spec:
-  secretName: aws-load-balancer-webhook-tls
+  secretName: {{ $.Values.environment }}-{{ $.Values.projectName }}-tls
   duration: 2160h
   renewBefore: 360h
   isCA: false
@@ -24,8 +21,7 @@ spec:
     algorithm: RSA
     size: 2048
   dnsNames:
-    - aws-load-balancer-webhook-service.kube-system.svc
-    - aws-load-balancer-webhook-service.kube-system.svc.cluster.local
+    - {{ $.Values.environment }}-{{ $.Values.projectName }}.com
   issuerRef:
     name: aws-pca-clusterissuer
     kind: AWSPCAClusterIssuer
