@@ -8,15 +8,20 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/tags: Environment={{ .Values.environment }},Project={{ .Values.projectName }}
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: alb
+  tls:
+  - hosts:
+    - dev.fancia.com
+    secretName: dev-fancia-tls
   rules:
   - host: {{ .Values.environment }}.{{ .Values.projectName }}.com
     http:
       paths:
       {{- range .Values.repositories }}
-      - path: /{{ .name }}
+      - path: /{{ .name }}(/|$)(.*)
         pathType: Prefix
         backend:
           service:
