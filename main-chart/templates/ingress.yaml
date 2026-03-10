@@ -1,27 +1,26 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: myapp-ingress
-  namespace: fancia
+  name: {{ $.Values.projectName }}-ingress
+  namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/tags: Environment={{ .Values.environment }},Project={{ .Values.projectName }}
+    alb.ingress.kubernetes.io/tags: Environment={{ $.Values.environment }},Project={{ $.Values.projectName }}
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.acmCertificateArn }}
+    alb.ingress.kubernetes.io/certificate-arn: {{ $.Values.acmCertificateArn }}
 spec:
   ingressClassName: alb
   tls:
   - hosts:
-    - {{ .Values.environment }}.{{ .Values.projectName }}.com
-    secretName: {{ .Values.environment }}-{{ .Values.projectName }}-tls
+    - {{ $.Values.domainName }}
+    secretName: {{ $.Values.environment }}-{{ $.Values.projectName }}-tls
   rules:
-  - host: {{ .Values.environment }}.{{ .Values.projectName }}.com
+  - host: {{ $.Values.domainName }}
     http:
       paths:
-      {{- range .Values.repositories }}
+      {{- range $.Values.repositories }}
       - path: /{{ .name }}
         pathType: Prefix
         backend:

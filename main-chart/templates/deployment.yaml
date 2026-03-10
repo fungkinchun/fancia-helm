@@ -1,10 +1,10 @@
-{{- range .Values.repositories }}
+{{- range $.Values.repositories  }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .name }}
-  namespace: {{ $.Values.projectName }}
+  namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
   labels:
     env: {{ $.Values.environment }}
     app.kubernetes.io/name: {{ .name }}
