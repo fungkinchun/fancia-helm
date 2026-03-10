@@ -55,14 +55,14 @@ spec:
             value: jdbc-secretsmanager:postgresql://{{ .name }}-rds.{{$.Values.projectName}}.{{$.Values.environment}}:5432/{{$.Values.projectName}}
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: /{{ .name }}/actuator/health/readiness
             port: {{ .port }}
           initialDelaySeconds: 120
           periodSeconds: 20
           
         livenessProbe:
           httpGet:
-            path: /actuator/health/liveness
+            path: /{{ .name }}/actuator/health/liveness
             port: {{ .port }}
           initialDelaySeconds: 120
           periodSeconds: 20
