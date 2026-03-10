@@ -22,7 +22,7 @@ spec:
     http:
       paths:
       {{- range .Values.repositories }}
-      - path: /{{ .name }}(/|$)(.*)
+      - path: /{{ .name }}
         pathType: Prefix
         backend:
           service:
