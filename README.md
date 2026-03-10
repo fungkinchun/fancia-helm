@@ -55,8 +55,13 @@ It is recommended to use fancia-infra-pipeline to deploy the infrastructure and 
 4. Execute values-gen.py which generates a values.yaml file in the main-chart directory to be used as Helm input:
 
    ```bash
-   python3 values-gen.py
+   python3 values-gen.py --out-dir=<your-output-dir>
    ```
+
+    ```bash
+    --var-file VAR_FILE  Path to tf_outputs.json
+    --out-dir OUT_DIR    Path to output values.json and values.yaml (default: current directory)
+    ```
 
 5. Deploy the Helm charts:
 

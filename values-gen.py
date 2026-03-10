@@ -114,14 +114,12 @@ def main():
     else:
         print(f"Warning: {rds_name_map_key} not found or not a map in tf_outputs.")
 
-    # Write JSON
     json_output = json.dumps(values, indent=2)
     json_path = out_path / 'values.json'
     with open(json_path, 'w') as f:
         f.write(json_output)
     print(f"values.json generated successfully at {json_path}.")
 
-    # Write YAML
     yaml_output = yaml.dump(values, default_flow_style=False)
     yaml_path = out_path / 'values.yaml'
     with open(yaml_path, 'w') as f:
