@@ -22,7 +22,7 @@ It is recommended to use fancia-infra-pipeline to deploy the infrastructure and 
 
    ```bash
    export AWS_PROFILE=<your-aws-profile>
-   export PROJECT_NAME=<your-project-name>
+   export NAMESPACE=<your-namespace>
    ```
 
 2. Set up Kubernetes context (example for EKS):
@@ -66,7 +66,7 @@ It is recommended to use fancia-infra-pipeline to deploy the infrastructure and 
 5. Deploy the Helm charts:
 
     ```bash
-    helm upgrade --install "$PROJECT_NAME" ./main-chart --namespace "$PROJECT_NAME" --create-namespace
+    helm upgrade --install "$NAMESPACE" ./main-chart --namespace "$NAMESPACE" --create-namespace
     ```
 
 ### Notes
