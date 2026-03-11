@@ -19,7 +19,6 @@ phases:
       - echo VPC_ID=$VPC_ID
       - helm repo add external-secrets https://charts.external-secrets.io
       - helm repo add eks https://aws.github.io/eks-charts
-      - helm repo add jetstack https://charts.jetstack.io
       - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
       - helm repo update
       - helm upgrade --install external-secrets external-secrets/external-secrets --namespace $PROJECT_NAME --set installCRDs=true
@@ -35,7 +34,6 @@ phases:
           --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$ENVIRONMENT-$PROJECT_NAME-alb-controller-role \
           --set serviceMutatorWebhookConfig.failurePolicy=Ignore
       - echo Installing certifcate related helm charts...
-      - helm upgrade --install cert-manager jetstack/cert-manager --namespace $PROJECT_NAME --set crds.enabled=true
       - helm upgrade --install aws-privateca-issuer awspca/aws-privateca-issuer --namespace $PROJECT_NAME
       - echo Starting 5-minute sleep to wait for cert-manager and aws-privateca-issuer to be ready...
       - sleep 300
