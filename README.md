@@ -18,7 +18,7 @@ It is recommended to use fancia-infra-pipeline to deploy the infrastructure and 
 
 ### Quick start (local deployment)
 
-1. Define the profile and project name to be used for deployment:
+1. Define the profile and namespace (e.g. $PROJECT_NAME-$ENVIRONMENT) to be used for deployment:
 
    ```bash
    export AWS_PROFILE=<your-aws-profile>
