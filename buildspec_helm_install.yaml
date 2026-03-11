@@ -12,6 +12,7 @@ phases:
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
   build:
     commands:
+      - export NAMESPACE=$PROJECT_NAME-$ENVIRONMENT
       - cp $CODEBUILD_SRC_DIR_tf_apply_output/tf_outputs.json .
       - python3 values-gen.py --out-dir=main-chart
       - cat main-chart/values.json
@@ -21,7 +22,7 @@ phases:
       - helm repo add eks https://aws.github.io/eks-charts
       - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
       - helm repo update
-      - helm upgrade --install external-secrets external-secrets/external-secrets --namespace $PROJECT_NAME --set installCRDs=true
+      - helm upgrade --install external-secrets external-secrets/external-secrets --namespace $NAMESPACE --set installCRDs=true
       - |
         helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
           --namespace ${PROJECT_NAME} \
@@ -34,7 +35,5 @@ phases:
           --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$ENVIRONMENT-$PROJECT_NAME-alb-controller-role \
           --set serviceMutatorWebhookConfig.failurePolicy=Ignore
       - echo Installing certifcate related helm charts...
-      - helm upgrade --install aws-privateca-issuer awspca/aws-privateca-issuer --namespace $PROJECT_NAME
-      - echo Starting 5-minute sleep to wait for cert-manager and aws-privateca-issuer to be ready...
-      - sleep 300
-      - helm upgrade --install $PROJECT_NAME ./main-chart --namespace $PROJECT_NAME
+      - helm upgrade --install aws-privateca-issuer awspca/aws-privateca-issuer --namespace $NAMESPACE
+      - helm upgrade --install $PROJECT_NAME ./main-chart --namespace $NAMESPACE

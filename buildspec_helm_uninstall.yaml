@@ -11,7 +11,8 @@ phases:
       - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
   build:
     commands:
-      - helm uninstall $PROJECT_NAME --namespace $PROJECT_NAME
-      - helm uninstall aws-privateca-issuer --namespace $PROJECT_NAME
-      - helm uninstall aws-load-balancer-controller --namespace $PROJECT_NAME
-      - helm uninstall external-secrets --namespace $PROJECT_NAME
+      - export NAMESPACE=$PROJECT_NAME-$ENVIRONMENT
+      - helm uninstall $PROJECT_NAME --namespace $NAMESPACE
+      - helm uninstall aws-privateca-issuer --namespace $NAMESPACE
+      - helm uninstall aws-load-balancer-controller --namespace $NAMESPACE
+      - helm uninstall external-secrets --namespace $NAMESPACE
