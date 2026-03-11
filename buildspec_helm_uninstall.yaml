@@ -1,0 +1,17 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/kubectl
+      - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+  build:
+    commands:
+      - helm uninstall $PROJECT_NAME --namespace $PROJECT_NAME
+      - helm uninstall aws-privateca-issuer --namespace $PROJECT_NAME
+      - helm uninstall aws-load-balancer-controller --namespace $PROJECT_NAME
+      - helm uninstall external-secrets --namespace $PROJECT_NAME
