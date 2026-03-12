@@ -39,6 +39,11 @@ phases:
           --set serviceMutatorWebhookConfig.failurePolicy=Ignore \
           --take-ownership
       - |
+        helm upgrade --install cert-manager jetstack/cert-manager \
+          --namespace $NAMESPACE \
+          --set crds.enabled=true \
+          --take-ownership
+      - |
         helm upgrade --install aws-privateca-issuer awspca/aws-privateca-issuer \
           --namespace $NAMESPACE \
           --take-ownership
