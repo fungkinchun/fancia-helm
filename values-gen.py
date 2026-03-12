@@ -70,7 +70,7 @@ def main():
     out_path.mkdir(parents=True, exist_ok=True)
 
     values = {}
-    keys_to_extract = ['environment', 'projectName', 'awsAccountId', 'awsRegion']
+    keys_to_extract = ['environment', 'projectName', 'awsAccountId', 'awsRegion', 'domainName']
     for key in keys_to_extract:
         upper_snake_key = camel_to_upper_snake(key)
         try:
