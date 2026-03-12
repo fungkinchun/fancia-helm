@@ -70,7 +70,17 @@ def main():
     out_path.mkdir(parents=True, exist_ok=True)
 
     values = {}
-    keys_to_extract = ['environment', 'projectName', 'awsAccountId', 'awsRegion', 'domainName']
+    environment = os.environ.get('ENVIRONMENT')
+    if not environment:
+        print("Error: ENVIRONMENT variable is not set.")
+        exit(1)
+    try:
+        tf_outputs = tf_outputs[environment]
+    except KeyError:
+        print(f"Error: No Terraform outputs found for environment: {environment}")
+        exit(1)
+        
+    keys_to_extract = ['projectName', 'awsAccountId', 'awsRegion', 'domainName']
     for key in keys_to_extract:
         upper_snake_key = camel_to_upper_snake(key)
         try:
