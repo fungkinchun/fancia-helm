@@ -43,6 +43,6 @@ phases:
           --namespace $NAMESPACE \
           --take-ownership
       - |
-        helm upgrade --install $PROJECT_NAME ./main-chart \
+        helm upgrade --install $NAMESPACE ./main-chart \
           --namespace $NAMESPACE \
           --take-ownership
