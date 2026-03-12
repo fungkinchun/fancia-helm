@@ -75,12 +75,12 @@ def main():
         print("Error: ENVIRONMENT variable is not set.")
         exit(1)
     try:
-        tf_outputs = tf_outputs[environment]
+        tf_outputs = tf_outputs[environment]['value']
     except KeyError:
         print(f"Error: No Terraform outputs found for environment: {environment}")
         exit(1)
-        
-    keys_to_extract = ['projectName', 'awsAccountId', 'awsRegion', 'domainName']
+
+    keys_to_extract = ['projectName', 'awsAccountId', 'awsRegion', 'domainName','vpcId', 'privateCaArn', 'acmCertificateArn']
     for key in keys_to_extract:
         upper_snake_key = camel_to_upper_snake(key)
         try:
@@ -88,7 +88,7 @@ def main():
         except KeyError:
             try:
                 snake_key = camel_to_snake(key)
-                values[key] = tf_outputs[snake_key]['value']
+                values[key] = tf_outputs[snake_key]
             except Exception:
                 if key == 'environment':
                     print(
@@ -99,22 +99,13 @@ def main():
                     f"Warning: {upper_snake_key} not found in environment variables or tf_outputs."
                 )
 
-    env_keys_to_extract = ['vpcId', 'privateCaArn', 'acmCertificateArn']
-    for key in env_keys_to_extract:
-        snake_key = camel_to_snake(key)
-        map_key = f"{values.get('environment','')}_{snake_key}"
-        try:
-            values[key] = tf_outputs[map_key]['value']
-        except Exception:
-            print(f"Warning: {map_key} not found in tf_outputs.")
-
     values["repositories"] = []
-    rds_name_map_key = f"{values.get('environment','')}_rds_secret_name_map"
+    rds_name_map_key = f"rds_secret_name_map"
     if (
         rds_name_map_key in tf_outputs
-        and isinstance(tf_outputs[rds_name_map_key].get('value'), dict)
+        and isinstance(tf_outputs[rds_name_map_key], dict)
     ):
-        for idx, (k, v) in enumerate(tf_outputs[rds_name_map_key]["value"].items()):
+        for idx, (k, v) in enumerate(tf_outputs[rds_name_map_key].items()):
             values["repositories"].append({
                 "name": k,
                 "databaseSecretName": v,
