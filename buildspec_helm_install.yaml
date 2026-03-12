@@ -20,6 +20,7 @@ phases:
       - echo VPC_ID=$VPC_ID
       - helm repo add external-secrets https://charts.external-secrets.io
       - helm repo add eks https://aws.github.io/eks-charts
+      - helm repo add jetstack https://charts.jetstack.io
       - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
       - helm repo update
       - |
