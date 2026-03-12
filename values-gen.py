@@ -79,7 +79,8 @@ def main():
     except KeyError:
         print(f"Error: No Terraform outputs found for environment: {environment}")
         exit(1)
-
+        
+    values['environment'] = environment
     keys_to_extract = ['projectName', 'awsAccountId', 'awsRegion', 'domainName','vpcId', 'privateCaArn', 'acmCertificateArn']
     for key in keys_to_extract:
         upper_snake_key = camel_to_upper_snake(key)
