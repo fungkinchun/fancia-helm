@@ -44,5 +44,5 @@ phases:
           --take-ownership
       - |
         helm upgrade --install $PROJECT_NAME ./main-chart \
-          --namespace $NAMESPACE
+          --namespace $NAMESPACE \
           --take-ownership
