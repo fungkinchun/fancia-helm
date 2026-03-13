@@ -31,24 +31,23 @@ It is recommended to use fancia-infra-pipeline to deploy the infrastructure and 
    aws eks update-kubeconfig --region <your-aws-region> --name <your-eks-cluster-name>
    ```
 
-3. Prepare values.json for Helm (example). Note some keys are environment-prefixed:
+3. Prepare values.json for Helm (example).
 
     ```json
     {
-        "dev_aws_account_id": {
-            "value": "<your-account-id>"
-        },
-        "dev_private_ca_arn": {
-            "value": "<your-private-ca-arn>"
-        },
-        "dev_rds_secret_name_map": { 
-            "value": {
-                 "<your-service-name>": "<your-service-rds-secret>" 
-            } 
-        },
-        "dev_vpc_id": {
-            "value": "<your-vpc-id>"
-        }
+        "awsAccountId": "<your-aws-account-id>",
+        "domainName": "<your-dev-domain>",
+        "vpcId": "<your-vpc-id>",
+        "privateCaArn": "<your-private-ca-arn>",
+        "acmCertificateArn": "<your-acm-certificate-arn>",
+        "repositories": [
+            {
+                "name": "<your-next-service-name>",
+                "databaseSecretName": "<your-rds-secret-name-for-this-service>",
+                "port": "<your-port>",
+                "imageVersion": "<your-image-tag>"
+            }
+        ]
     }
     ```
 
@@ -71,4 +70,15 @@ It is recommended to use fancia-infra-pipeline to deploy the infrastructure and 
 
 ### Notes
 
-- Update variables in `terraform.tfvars` (project_name, region, profile, GitHub connection details, and infra_credentials) before applying. Create a local `terraform.tfvars` file if it does not exist and ensure it is not checked into version control.
+- The `--take-ownership` flag is used because Helm adds ownership annotations to CRDs during installation. Without it, the install fails if the CRD already exists with different metadata.
+For example, you might see this error if the CRD was previously deployed to a different namespace:
+
+    ```text
+    Error: Unable to continue with install: ... invalid ownership metadata; annotation validation error: key "meta.helm.sh/release-namespace" must equal "fancia-dev": current value is "fancia"
+    ```
+
+By using `--take-ownership`, Helm overwrites the existing annotations and adopts the resource into the current release.
+
+-- Before running helm install, we execute `kubectl rollout restart deployment aws-load-balancer-controller`. This triggers a fresh reconciliation loop, ensuring the controller immediately processes any recent changes, such as updated ACM certificates.
+
+-- `cert-manager` is a prerequisite, the `aws-privateca-issuer` enables it to interface with AWS Private CA to fulfill and sign certificate requests.
