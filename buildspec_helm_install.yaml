@@ -51,12 +51,10 @@ phases:
           --namespace $NAMESPACE \
           --take-ownership
       - |
+        helm upgrade --install strimzi-kafka-operator strimzi/strimzi-kafka-operator \
+        --namespace $NAMESPACE \
+        --take-ownership
+      - |
         helm upgrade --install $NAMESPACE ./main-chart \
           --namespace $NAMESPACE \
           --take-ownership
-      - |
-        helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator \
-        --namespace $NAMESPACE \
-        --create-namespace
-        --take-ownership
-
