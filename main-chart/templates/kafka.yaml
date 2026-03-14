@@ -1,7 +1,7 @@
 apiVersion: kafka.strimzi.io/v1
 kind: KafkaNodePool
 metadata:
-  name: {{ $.Values.projectName }}-dual-role
+  name: {{ $.Values.projectName }}-{{ $.Values.environment }}-dual-role
   namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
   labels:
     strimzi.io/cluster: {{ $.Values.projectName }}-{{ $.Values.environment }}-kafka
@@ -23,6 +23,7 @@ apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: {{ $.Values.projectName }}-{{ $.Values.environment }}-kafka
+  namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
 spec:
   kafka:
     version: 4.2.0
