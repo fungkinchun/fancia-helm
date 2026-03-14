@@ -33,6 +33,10 @@ metadata:
   labels:
     strimzi.io/cluster: {{ $.Values.projectName }}-{{ $.Values.environment }}-kafka
 spec:
+  template:
+    pod:
+      nodeSelector:
+        eks.amazonaws.com/compute-type: auto
   replicas: 1
   roles:
     - controller
