@@ -26,7 +26,7 @@ spec:
 ---
 
 apiVersion: kafka.strimzi.io/v1
-kind: KafkaNodePool
+  kind: KafkaNodePool
 metadata:
   name: {{ $.Values.projectName }}-{{ $.Values.environment }}-dual-role
   namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
@@ -56,6 +56,8 @@ kind: Kafka
 metadata:
   name: {{ $.Values.projectName }}-{{ $.Values.environment }}-kafka
   namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
+  annotations:
+    strimzi.io/node-pools: enabled
 spec:
   kafka:
     version: 4.2.0
