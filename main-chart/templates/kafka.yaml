@@ -34,9 +34,8 @@ metadata:
 spec:
   template:
     pod:
-      spec:
-        nodeSelector:
-          eks.amazonaws.com/compute-type: auto
+      nodeSelector:
+        eks.amazonaws.com/compute-type: auto
   replicas: 1
   roles:
     - controller
