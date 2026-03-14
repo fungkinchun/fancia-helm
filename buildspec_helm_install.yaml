@@ -56,7 +56,8 @@ phases:
           --namespace $NAMESPACE \
           --take-ownership
       - |
-        helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver\
+        helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
+          --set controller.serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
           --namespace $NAMESPACE \
           --take-ownership
       - |
