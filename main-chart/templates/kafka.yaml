@@ -8,7 +8,6 @@ parameters:
   type: gp3               
   fsType: ext4            
 reclaimPolicy: Delete
-volumeBindingMode: WaitForFirstConsumer
 ---
 
 apiVersion: v1
@@ -35,8 +34,9 @@ metadata:
 spec:
   template:
     pod:
-      nodeSelector:
-        eks.amazonaws.com/compute-type: auto
+      spec:
+        nodeSelector:
+          eks.amazonaws.com/compute-type: auto
   replicas: 1
   roles:
     - controller
