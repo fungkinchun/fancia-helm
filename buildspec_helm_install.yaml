@@ -23,6 +23,7 @@ phases:
       - helm repo add jetstack https://charts.jetstack.io
       - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
       - helm repo add strimzi https://strimzi.io/charts/
+      - helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
       - helm repo update
       - echo Forcing reconciliation...
       - kubectl rollout restart deployment aws-load-balancer-controller -n $NAMESPACE
@@ -52,8 +53,12 @@ phases:
           --take-ownership
       - |
         helm upgrade --install strimzi-kafka-operator strimzi/strimzi-kafka-operator \
-        --namespace $NAMESPACE \
-        --take-ownership
+          --namespace $NAMESPACE \
+          --take-ownership
+      - |
+        helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver\
+          --namespace $NAMESPACE \
+          --take-ownership
       - |
         helm upgrade --install $NAMESPACE ./main-chart \
           --namespace $NAMESPACE \
