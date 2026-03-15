@@ -13,6 +13,7 @@ phases:
     commands:
       - export NAMESPACE=$PROJECT_NAME-$ENVIRONMENT
       - helm uninstall $PROJECT_NAME --namespace $NAMESPACE
+      - helm uninstall external-dns --namespace $NAMESPACE
       - helm uninstall aws-ebs-csi-driver --namespace $NAMESPACE
       - helm uninstall strimzi-kafka-operator --namespace $NAMESPACE
       - helm uninstall aws-privateca-issuer --namespace $NAMESPACE

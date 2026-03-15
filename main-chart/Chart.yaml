@@ -1,6 +1,6 @@
 apiVersion: v2
-name: fancia
-description: A Helm chart for Fancia
+name: {{ $.Values.projectName }}
+description: A Helm chart for {{ $.Values.projectName }}
 
 type: application
 version: 0.1.0

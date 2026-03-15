@@ -22,8 +22,9 @@ phases:
       - helm repo add eks https://aws.github.io/eks-charts
       - helm repo add jetstack https://charts.jetstack.io
       - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
-      - helm repo add strimzi https://strimzi.io/charts/
+      - helm repo add strimzi https://strimzi.io/charts
       - helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+      - helm repo add external-dns https://kubernetes-sigs.github.io/external-dns
       - helm repo update
       - echo Forcing reconciliation...
       - kubectl rollout restart deployment aws-load-balancer-controller -n $NAMESPACE
@@ -59,6 +60,17 @@ phases:
         helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
           --set controller.serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
           --namespace $NAMESPACE \
+          --take-ownership
+      - |
+        helm upgrade --install external-dns external-dns/external-dns \
+          --namespace $NAMESPACE \
+          --set provider.name=aws \
+          --set aws.region=$AWS_REGION \
+          --set aws.zoneType=public \
+          --set txtOwnerId=$NAMESPACE \
+          --set serviceAccount.create=true \
+          --set serviceAccount.name=external-dns \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
           --take-ownership
       - |
         helm upgrade --install $NAMESPACE ./main-chart \

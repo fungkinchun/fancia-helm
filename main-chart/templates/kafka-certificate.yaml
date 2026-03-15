@@ -1,0 +1,39 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ $.Values.projectName }}-{{ $.Values.environment }}-letsencrypt
+spec:
+  acme:
+    email: {{ $.Values.email }}
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ $.Values.projectName }}-{{ $.Values.environment }}-letsencrypt-key
+    solvers:
+      - dns01:
+          route53:
+            region: {{ $.Values.awsRegion }}
+            hostedZoneID: {{ $.Values.hostedZoneId }}
+            role: arn:aws:iam::{{$.Values.awsAccountId}}:role/{{ $.Values.projectName }}-{{ $.Values.environment }}-pod-role
+        selector:
+          dnsZones:
+            - {{ $.Values.domainName }}
+            - "*.{{ $.Values.domainName }}"
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $.Values.projectName }}-{{ $.Values.environment }}-letsencrypt
+  namespace: {{ $.Values.projectName }}-{{ $.Values.environment }}
+spec:
+  secretName: {{ $.Values.projectName }}-{{ $.Values.environment }}-letsencrypt
+  issuerRef:
+    name: {{ $.Values.projectName }}-{{ $.Values.environment }}-letsencrypt
+    kind: ClusterIssuer
+    group: cert-manager.io
+  subject:
+    organizations:
+      - {{ $.Values.projectName }}
+  dnsNames:
+    - bootstrap.{{ $.Values.domainName }}
+    - broker-0.{{ $.Values.domainName }}
