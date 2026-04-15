@@ -1,0 +1,131 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/kubectl
+      - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      - pip install pyyaml
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+  build:
+    commands:
+      - export NAMESPACE=$PROJECT_NAME-$ENVIRONMENT
+      - cp $CODEBUILD_SRC_DIR_tf_apply_output/tf_outputs.json .
+      - python3 values-gen.py --out-dir=main-chart
+      - cat main-chart/values.json
+      - export VPC_ID=$(jq -r '.vpcId' main-chart/values.json)
+      - export HOSTED_ZONE_IDENTIFIER=$(jq -r '.hostedZoneId' main-chart/values.json)
+      - export HOSTED_ZONE_NAME=$(jq -r '.domainName' main-chart/values.json)
+      - echo VPC_ID=$VPC_ID
+      - helm repo add external-secrets https://charts.external-secrets.io
+      - helm repo add eks https://aws.github.io/eks-charts
+      - helm repo add jetstack https://charts.jetstack.io
+      - helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
+      - helm repo add strimzi https://strimzi.io/charts
+      - helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+      - helm repo add external-dns https://kubernetes-sigs.github.io/external-dns
+      - helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+      - helm repo add grafana-community https://grafana-community.github.io/helm-charts
+      - helm repo add grafana https://grafana.github.io/helm-charts
+      - helm repo add kedacore https://kedacore.github.io/charts
+      - helm repo update
+      - echo Forcing reconciliation...
+      - kubectl rollout restart deployment aws-load-balancer-controller -n kube-system || true
+      - kubectl rollout restart deployment cert-manager-webhook -n cert-manager || true
+      - kubectl rollout restart deployment external-secrets-webhook -n external-secrets || true
+      - |
+        helm upgrade --install external-secrets external-secrets/external-secrets \
+          --namespace external-secrets \
+          --create-namespace \
+          --set installCRDs=true \
+          --take-ownership
+      - |
+        helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-controller \
+          --namespace kube-system \
+          --set clusterName=$EKS_CLUSTER_NAME \
+          --set region=$AWS_REGION \
+          --set vpcId=$VPC_ID \
+          --set serviceAccount.create=true \
+          --set serviceAccount.name=aws-load-balancer-controller \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-alb-controller-role \
+          --take-ownership
+      - |
+        helm upgrade --install cert-manager jetstack/cert-manager \
+          --namespace cert-manager \
+          --create-namespace \
+          --set installCRDs=true \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
+          --set 'extraArgs={--dns01-recursive-nameservers-only,--dns01-recursive-nameservers=8.8.8.8:53\,1.1.1.1:53}' \
+          --take-ownership
+      - |
+        helm upgrade --install aws-privateca-issuer awspca/aws-privateca-issuer \
+          --namespace cert-manager \
+          --take-ownership
+      - |
+        helm upgrade --install strimzi-kafka-operator strimzi/strimzi-kafka-operator \
+          --namespace strimzi \
+          --create-namespace \
+          --set watchAnyNamespace=true \
+          --take-ownership
+      - |
+        helm upgrade --install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver \
+          --set controller.serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
+          --namespace kube-system \
+          --take-ownership
+      - |
+        helm upgrade --install external-dns external-dns/external-dns \
+          --namespace external-dns \
+          --create-namespace \
+          --set provider.name=aws \
+          --set aws.region=$AWS_REGION \
+          --set aws.zoneType=public \
+          --set txtOwnerId=$HOSTED_ZONE_IDENTIFIER \
+          --set txtPrefix=external-dns- \
+          --set domainFilters[0]=$HOSTED_ZONE_NAME \
+          --set serviceAccount.create=true \
+          --set serviceAccount.name=external-dns \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
+          --take-ownership
+      - |
+        helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+          --namespace monitoring \
+          --create-namespace \
+          -f ./main-chart/monitoring-values.yaml \
+          --take-ownership
+      - |
+        helm upgrade --install loki grafana-community/loki \
+          --namespace monitoring \
+          --create-namespace \
+          --set serviceAccount.create=true \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
+          --set serviceAccount.name=loki \
+          --take-ownership \
+          -f ./main-chart/loki-values.yaml
+      - |
+        helm upgrade --install alloy grafana/alloy \
+          --namespace monitoring \
+          --set alloy.mounts.varlog=true \
+          --set controller.type=daemonset \
+          --set serviceAccount.create=true \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
+          --set serviceAccount.name=alloy \
+          --take-ownership \
+          -f ./main-chart/alloy-values.yaml
+      - |
+        helm upgrade --install keda kedacore/keda \
+          --namespace monitoring \
+          --create-namespace \
+          --set serviceAccount.create=true \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::${AWS_ACCOUNT_ID}:role/${NAMESPACE}-pod-role \
+          --set serviceAccount.name=keda \
+          --take-ownership
+      - |
+        helm upgrade --install $PROJECT_NAME ./main-chart \
+          --namespace $NAMESPACE \
+          --set serviceAccount.create=true \
+          --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-pod-role \
+          --create-namespace \
+          --take-ownership

@@ -1,0 +1,27 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      - chmod +x kubectl
+      - mv kubectl /usr/local/bin/kubectl
+      - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  pre_build:
+    commands:
+      - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME || true
+  build:
+    commands:
+      - export NAMESPACE=$PROJECT_NAME-$ENVIRONMENT
+      - helm uninstall $PROJECT_NAME --namespace $NAMESPACE || true
+      - helm uninstall keda --namespace monitoring || true
+      - helm uninstall alloy --namespace monitoring || true
+      - helm uninstall loki --namespace monitoring || true
+      - helm uninstall monitoring --namespace monitoring || true
+      - helm uninstall external-dns --namespace external-dns || true
+      - helm uninstall aws-ebs-csi-driver --namespace kube-system || true
+      - helm uninstall strimzi-kafka-operator --namespace strimzi || true
+      - helm uninstall aws-privateca-issuer --namespace cert-manager || true
+      - helm uninstall cert-manager --namespace cert-manager || true
+      - helm uninstall aws-load-balancer-controller --namespace kube-system || true
+      - helm uninstall external-secrets --namespace external-secrets || true
+

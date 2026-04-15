@@ -1,0 +1,25 @@
+{{- range $.Values.repositories  }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ .name }}-cron-scaler
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Namespace }}
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: {{ $.Values.projectName }}
+spec:
+  scaleTargetRef:
+    name: {{ .name }}
+  minReplicaCount: 0
+  maxReplicaCount: 1
+  triggers:
+  - type: cron
+    metadata:
+      timezone: Europe/London
+      start: "0 13 * * 1-5"
+      end: "0 18 * * 1-5"
+      desiredReplicas: "1"
+{{- end }}

@@ -1,0 +1,30 @@
+grafana:
+  enabled: true
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/tags: Environment=dev,Project=fancia
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+      alb.ingress.kubernetes.io/group.name: fancia-shared-alb
+      external-dns.alpha.kubernetes.io/hostname: grafana.fancia.co.uk
+    hosts:
+      - grafana.fancia.co.uk
+  grafana.ini:
+    server:
+      root_url: http://grafana.fancia.co.uk
+
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      access: proxy
+      url: http://loki-gateway.monitoring.svc.cluster.local
+      isDefault: false
+      jsonData:
+        httpHeaderName1: "X-Scope-OrgID"
+      secureJsonData:
+        httpHeaderValue1: "fancia"
+      editable: true
+      version: 1

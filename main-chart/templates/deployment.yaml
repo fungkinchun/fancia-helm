@@ -1,0 +1,81 @@
+{{- range $.Values.repositories  }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    env: {{ $.Values.environment }}
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Namespace }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .name }}
+      app.kubernetes.io/instance: {{ $.Release.Namespace }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .name }}
+        app.kubernetes.io/instance: {{ $.Release.Namespace }}
+
+    spec:
+      serviceAccountName: {{$.Values.projectName}}-sa
+      containers:
+      - name: {{ .name }}
+        image: {{$.Values.awsAccountId}}.dkr.ecr.{{$.Values.awsRegion}}.amazonaws.com/{{$.Values.projectName}}-backend-{{ .name }}:{{ .imageVersion }}
+        ports:
+        - containerPort: {{ .port }}
+        envFrom:
+        - secretRef:
+            name: {{ .name }}-database
+        {{- if eq .name "user" }}
+        - secretRef:
+            name: s3 
+        - secretRef:
+            name: smtp
+        {{- end }}
+        env:
+          - name: SERVER_PORT
+            value: "{{ .port }}"
+          - name: AWS_RDS_SECRET_NAME
+            value: {{ .databaseSecretName }}
+          - name: ENV
+            value: {{ $.Values.environment }}
+          - name: PROJECT_NAME
+            value: {{ $.Values.projectName }}
+          - name: REPO_NAME
+            value: {{ .name }}
+          - name: DATABASE_URL
+            value: jdbc-secretsmanager:postgresql://{{ .databaseName }}-rds.{{$.Values.domainName}}:5432/{{$.Values.projectName}}
+          - name: DOMAIN_NAME
+            value: {{ $.Values.domainName }}
+        readinessProbe:
+          httpGet:
+            path: /{{ .name }}/actuator/health/readiness
+            port: {{ .port }}
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          
+        livenessProbe:
+          httpGet:
+            path: /{{ .name }}/actuator/health/liveness
+            port: {{ .port }}
+          initialDelaySeconds: 120
+          periodSeconds: 20
+          
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+{{- end }}

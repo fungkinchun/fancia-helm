@@ -1,0 +1,99 @@
+apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: {{ $.Release.Namespace }}-dual-role
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    strimzi.io/cluster: {{ $.Release.Namespace }}-kafka
+spec:
+  template:
+    pod:
+      nodeSelector:
+        eks.amazonaws.com/compute-type: auto
+      containers:
+        - name: kafka
+          livenessProbe:
+            initialDelaySeconds: 120
+            timeoutSeconds: 15
+            periodSeconds: 20
+            failureThreshold: 6
+          readinessProbe:
+            initialDelaySeconds: 90
+            timeoutSeconds: 10
+            periodSeconds: 15
+            failureThreshold: 12
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 10Gi
+        class: gp3
+        kraftMetadata: shared
+---
+
+apiVersion: kafka.strimzi.io/v1
+kind: Kafka
+metadata:
+  name: {{ $.Release.Namespace }}-kafka
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    strimzi.io/node-pools: enabled
+spec:
+  kafka:
+    version: 4.2.0
+    metadataVersion: 4.2-IV1
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9094
+        type: loadbalancer
+        tls: false
+        configuration:
+          loadbalancer:
+            class: eks.amazonaws.com/nlb          
+            useServiceDnsDomain: true
+          bootstrap:
+            advertisedHost: bootstrap.{{ $.Values.domainName }}
+            annotations:
+              service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+              service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+              service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: TCP
+              service.beta.kubernetes.io/aws-load-balancer-healthcheck-port: "9094"
+              {{- if eq $.Values.environment "prod" }}
+              service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "9094"
+              service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ $.Values.acmCertificateArn }}
+              {{- end }}
+              external-dns.alpha.kubernetes.io/hostname: bootstrap.{{ $.Values.domainName }}.
+              external-dns.alpha.kubernetes.io/ttl: "60"
+          brokers:
+          - broker: 0
+            advertisedHost: broker-0.{{ $.Values.domainName }}
+            annotations:
+              service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+              service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+              {{- if eq $.Values.environment "prod" }}
+              service.beta.kubernetes.io/aws-load-balancer-ssl-cert: {{ $.Values.acmCertificateArn }}
+              {{- end }}
+              external-dns.alpha.kubernetes.io/hostname: broker-0.{{ $.Values.domainName }}.
+              external-dns.alpha.kubernetes.io/ttl: "60"
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}

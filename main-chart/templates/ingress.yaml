@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $.Values.projectName }}-ingress
+  namespace: {{ $.Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/tags: Environment={{ $.Values.environment }},Project={{ $.Values.projectName }}
+    {{- if eq $.Values.environment "prod" }}
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/certificate-arn: {{ $.Values.acmCertificateArn }}
+    {{- else }}
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    {{- end }}
+    external-dns.alpha.kubernetes.io/hostname: {{ $.Values.domainName }}
+    external-dns.alpha.kubernetes.io/ingress-hostname-source: annotation-only
+    alb.ingress.kubernetes.io/group.name: {{ $.Values.projectName }}-shared-alb
+spec:
+  ingressClassName: alb
+  {{- if eq $.Values.environment "prod" }}
+  tls:
+  - hosts:
+    - {{ $.Values.domainName }}
+    secretName: {{ $.Values.environment }}-{{ $.Values.projectName }}-tls
+  {{- end }}
+  rules:
+  - host: {{ $.Values.domainName }}
+    http:
+      paths:
+      {{- range $.Values.repositories }}
+      - path: /{{ .name }}
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .name }}
+            port:
+              number: {{ .port | default 8080 }}
+      {{- end }}
