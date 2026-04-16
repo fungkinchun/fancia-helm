@@ -36,12 +36,10 @@ spec:
         envFrom:
         - secretRef:
             name: {{ .name }}-database
-        {{- if eq .name "user" }}
         - secretRef:
             name: s3 
         - secretRef:
             name: smtp
-        {{- end }}
         env:
           - name: SERVER_PORT
             value: "{{ .port }}"
@@ -73,9 +71,9 @@ spec:
           
         resources:
           requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
             cpu: 500m
             memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
 {{- end }}
