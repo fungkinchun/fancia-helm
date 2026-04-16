@@ -53,6 +53,11 @@ phases:
           --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-alb-controller-role \
           --take-ownership
       - |
+        while [[ -z $(kubectl get endpointslice -l kubernetes.io/service-name=aws-load-balancer-webhook-service -n kube-system -o jsonpath='{.items[*].endpoints[*].addresses[*]}') ]]; do
+          echo "Waiting for AWS LBC webhook endpoints..."
+          sleep 10
+        done
+      - |
         helm upgrade --install cert-manager jetstack/cert-manager \
           --namespace cert-manager \
           --create-namespace \
@@ -122,6 +127,15 @@ phases:
           --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::${AWS_ACCOUNT_ID}:role/${NAMESPACE}-pod-role \
           --set serviceAccount.name=keda \
           --take-ownership
+      - |
+        for svc in cert-manager-webhook:cert-manager external-secrets-webhook:external-secrets; do
+          NAME=${svc%:*}
+          NS=${svc#*:}
+          echo "Checking $NAME in $NS..."
+          while [[ -z $(kubectl get endpointslice -l kubernetes.io/service-name=$NAME -n $NS -o jsonpath='{.items[*].endpoints[?(@.conditions.ready==true)].addresses}') ]]; do
+            sleep 5
+          done
+        done
       - |
         helm upgrade --install $PROJECT_NAME ./main-chart \
           --namespace $NAMESPACE \
