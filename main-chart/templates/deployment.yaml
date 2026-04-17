@@ -61,7 +61,9 @@ spec:
             port: {{ .port }}
           initialDelaySeconds: 120
           periodSeconds: 20
-          
+          timeoutSeconds: 5
+          failureThreshold: 3
+
         livenessProbe:
           httpGet:
             path: /{{ .name }}/actuator/health/liveness
