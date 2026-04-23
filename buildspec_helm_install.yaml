@@ -53,7 +53,7 @@ phases:
           --set serviceAccount.annotations."eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::$AWS_ACCOUNT_ID:role/$NAMESPACE-alb-controller-role \
           --take-ownership
       - |
-        while [ -z "$(kubectl get endpointslice -l kubernetes.io/service-name=aws-load-balancer-webhook-service -n kube-system -o jsonpath='{.items[*].endpoints[*].addresses[*]}')" ]; do
+        while [ -z "$(kubectl get endpointslice -l kubernetes.io/service-name=aws-load-balancer-webhook-service -n kube-system -o jsonpath='{.items[*].endpoints[?(@.conditions.ready==true)].addresses[*]}')" ]; do
           echo "Waiting for AWS LBC webhook endpoints..."
           sleep 10
         done
@@ -112,6 +112,7 @@ phases:
       - |
         helm upgrade --install alloy grafana/alloy \
           --namespace monitoring \
+          --version 1.7.0 \
           --set alloy.mounts.varlog=true \
           --set controller.type=daemonset \
           --set serviceAccount.create=true \
