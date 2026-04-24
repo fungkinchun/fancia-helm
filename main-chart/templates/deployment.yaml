@@ -55,6 +55,8 @@ spec:
             value: jdbc-secretsmanager:postgresql://{{ .databaseName }}-rds.{{$.Values.domainName}}:5432/{{$.Values.projectName}}
           - name: DOMAIN_NAME
             value: {{ $.Values.domainName }}
+          - name: SPRING_PROFILES_ACTIVE
+            value: {{ $.Values.environment }}
         readinessProbe:
           httpGet:
             path: /{{ .name }}/actuator/health/readiness
