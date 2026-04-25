@@ -62,9 +62,9 @@ spec:
             path: /{{ .name }}/actuator/health/readiness
             port: {{ .port }}
           initialDelaySeconds: 120
-          periodSeconds: 20
+          periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 3
+          failureThreshold: 5
 
         livenessProbe:
           httpGet:
@@ -76,8 +76,8 @@ spec:
         resources:
           requests:
             cpu: 500m
-            memory: 512Mi
+            memory: 1Gi
           limits:
             cpu: 1000m
-            memory: 1Gi
+            memory: 1.5Gi
 {{- end }}

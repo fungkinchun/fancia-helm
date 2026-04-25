@@ -193,3 +193,23 @@ ExternalDNS uses TXT ownership records to determine which DNS entries it can man
 Use `--set txtPrefix=external-dns-` (or set `txtPrefix: "external-dns-"` in Helm values) to ensure proper ownership tracking and propagation.  
 
 Alternatively, manually delete the stale `A` and `AAAA` records in Route 53. ExternalDNS will then recreate them pointing to the new ALB.
+
+- This project uses KEDA (Kubernetes Event-driven Autoscaling) to automatically scale down infrastructure during non-business hours to reduce costs. This is particularly useful for demo and development environments where 24/7 availability is not required. 
+
+  To disable autoscaling for a specific deployment, add the following annotation to the ScaledObject:
+
+  ```yaml
+  apiVersion: keda.sh/v1alpha1
+  kind: ScaledObject
+  metadata:
+    annotations:
+      autoscaling.keda.sh/paused: "true"
+  ```
+
+  After pausing KEDA, manually scale the deployment to maintain a minimum number of replicas:
+
+  ```bash
+  kubectl -n <your-namespace> scale deployment <your-deployment-name> --replicas=1
+  ```
+
+  This pauses the KEDA scaler without removing the ScaledObject configuration, allowing you to re-enable scaling later by removing the annotation.
