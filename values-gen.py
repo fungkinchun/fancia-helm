@@ -81,7 +81,7 @@ def main():
         exit(1)
         
     values['environment'] = environment
-    keys_to_extract = ['projectName', 'awsAccountId', 'awsRegion', 'domainName', 'email', 'vpcId', 'acmCertificateArn', 'hostedZoneId']
+    keys_to_extract = ['projectName', 'awsAccountId', 'awsRegion', 'domainName', 'email', 'vpcId', 'acmCertificateArn', 'privateHostedZoneId', 'publicHostedZoneId']
     for key in keys_to_extract:
         upper_snake_key = camel_to_upper_snake(key)
         try:

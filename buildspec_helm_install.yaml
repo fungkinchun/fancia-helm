@@ -17,7 +17,8 @@ phases:
       - python3 values-gen.py --out-dir=main-chart
       - cat main-chart/values.json
       - export VPC_ID=$(jq -r '.vpcId' main-chart/values.json)
-      - export HOSTED_ZONE_IDENTIFIER=$(jq -r '.hostedZoneId' main-chart/values.json)
+      - export PRIVATE_HOSTED_ZONE_IDENTIFIER=$(jq -r '.privateHostedZoneId' main-chart/values.json)
+      - export PUBLIC_HOSTED_ZONE_IDENTIFIER=$(jq -r '.publicHostedZoneId' main-chart/values.json)
       - export HOSTED_ZONE_NAME=$(jq -r '.domainName' main-chart/values.json)
       - echo VPC_ID=$VPC_ID
       - helm repo add external-secrets https://charts.external-secrets.io
@@ -87,7 +88,7 @@ phases:
           --set provider.name=aws \
           --set aws.region=$AWS_REGION \
           --set aws.zoneType=public \
-          --set txtOwnerId=$HOSTED_ZONE_IDENTIFIER \
+          --set txtOwnerId=$PRIVATE_HOSTED_ZONE_IDENTIFIER \
           --set txtPrefix=external-dns- \
           --set domainFilters[0]=$HOSTED_ZONE_NAME \
           --set serviceAccount.create=true \
