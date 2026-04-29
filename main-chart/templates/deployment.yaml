@@ -80,4 +80,35 @@ spec:
           limits:
             cpu: 1000m
             memory: 1.5Gi
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .name }}-hpa
+  namespace: {{ $.Release.Namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .name }}
+  {{- if eq $.Values.environment "prod" }}
+  minReplicas: 1
+  maxReplicas: 2
+  {{- else }}
+  minReplicas: 0
+  maxReplicas: 1
+  {{- end }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 75
 {{- end }}
