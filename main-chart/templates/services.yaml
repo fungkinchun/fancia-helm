@@ -1,0 +1,24 @@
+{{- range $.Values.repositories }}
+{{- $svc := index $.Values.services .name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Namespace }}
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: {{ $.Values.projectName }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ $svc.port }}
+      targetPort: {{ $svc.port }}
+  selector:
+    app.kubernetes.io/name: {{ .name }}
+    app.kubernetes.io/instance: {{ $.Release.Namespace }}
+{{- end }}

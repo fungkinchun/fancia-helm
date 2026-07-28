@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ required "projectName is required" .Values.projectName }}-apps
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: apps
+  source:
+    repoURL: {{ required "helmRepoUrl is required" .Values.helmRepoUrl | quote }}
+    targetRevision: {{ .Values.targetRevision | quote }}
+    path: main-chart
+    helm:
+      valueFiles:
+        - values.yaml
+        - {{ include "argocd.dynamicValuesFile" . }}
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: {{ required "namespace is required" .Values.namespace | quote }}
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - CreateNamespace=true

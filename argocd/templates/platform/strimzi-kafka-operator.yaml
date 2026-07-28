@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi-kafka-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: platform
+  source:
+    repoURL: {{ .Values.charts.strimzi.repo | quote }}
+    chart: {{ .Values.charts.strimzi.name | quote }}
+    targetRevision: {{ .Values.charts.strimzi.version | quote }}
+    helm:
+      values: |
+        watchAnyNamespace: true
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: strimzi
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

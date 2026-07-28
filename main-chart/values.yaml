@@ -1,0 +1,13 @@
+services:
+  auth:
+    port: 8080
+    imageVersion: latest
+  user:
+    port: 8081
+    imageVersion: latest
+  event:
+    port: 8082
+    imageVersion: latest
+  interestgroup:
+    port: 8083
+    imageVersion: latest

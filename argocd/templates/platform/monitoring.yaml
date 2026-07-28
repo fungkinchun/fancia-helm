@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: platform
+  sources:
+    - repoURL: {{ required "helmRepoUrl is required" .Values.helmRepoUrl | quote }}
+      targetRevision: {{ .Values.targetRevision | quote }}
+      ref: values
+    - repoURL: {{ .Values.charts.monitoring.repo | quote }}
+      chart: {{ .Values.charts.monitoring.name | quote }}
+      targetRevision: {{ .Values.charts.monitoring.version | quote }}
+      helm:
+        valueFiles:
+          - $values/main-chart/monitoring-values.yaml
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: monitoring
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

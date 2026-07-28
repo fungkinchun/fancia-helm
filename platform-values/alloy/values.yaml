@@ -1,0 +1,9 @@
+
+alloy:
+  mounts:
+    varlog: true
+controller:
+  type: daemonset
+serviceAccount:
+  create: true
+  name: alloy

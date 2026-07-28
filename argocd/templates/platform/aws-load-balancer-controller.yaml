@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-load-balancer-controller
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: platform
+  sources:
+    - repoURL: {{ required "helmRepoUrl is required" .Values.helmRepoUrl | quote }}
+      targetRevision: {{ .Values.targetRevision | quote }}
+      ref: values
+    - repoURL: {{ .Values.charts.albController.repo | quote }}
+      chart: {{ .Values.charts.albController.name | quote }}
+      targetRevision: {{ .Values.charts.albController.version | quote }}
+      helm:
+        valueFiles:
+          - $values/platform-values/aws-load-balancer-controller/values.yaml
+          - $values/platform-values/aws-load-balancer-controller/{{ include "argocd.dynamicValuesFile" . }}
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: kube-system
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - ServerSideApply=true

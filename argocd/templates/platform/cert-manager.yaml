@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: platform
+  sources:
+    - repoURL: {{ required "helmRepoUrl is required" .Values.helmRepoUrl | quote }}
+      targetRevision: {{ .Values.targetRevision | quote }}
+      ref: values
+    - repoURL: {{ .Values.charts.certManager.repo | quote }}
+      chart: {{ .Values.charts.certManager.name | quote }}
+      targetRevision: {{ .Values.charts.certManager.version | quote }}
+      helm:
+        valueFiles:
+          - $values/platform-values/cert-manager/values.yaml
+          - $values/platform-values/cert-manager/{{ include "argocd.dynamicValuesFile" . }}
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: cert-manager
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

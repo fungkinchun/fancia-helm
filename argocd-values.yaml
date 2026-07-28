@@ -1,0 +1,14 @@
+server:
+  ingress:
+    enabled: true
+    ingressClassName: alb
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/group.name: fancia-shared-alb
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+  service:
+    type: ClusterIP
+configs:
+  params:
+    server.insecure: "true"

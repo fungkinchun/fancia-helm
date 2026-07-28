@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: alloy
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: platform
+  sources:
+    - repoURL: {{ required "helmRepoUrl is required" .Values.helmRepoUrl | quote }}
+      targetRevision: {{ .Values.targetRevision | quote }}
+      ref: values
+    - repoURL: {{ .Values.charts.alloy.repo | quote }}
+      chart: {{ .Values.charts.alloy.name | quote }}
+      targetRevision: {{ .Values.charts.alloy.version | quote }}
+      helm:
+        valueFiles:
+          - $values/platform-values/alloy/values.yaml
+          - $values/platform-values/alloy/{{ include "argocd.dynamicValuesFile" . }}
+          - $values/main-chart/alloy-values.yaml
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: monitoring
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - ServerSideApply=true

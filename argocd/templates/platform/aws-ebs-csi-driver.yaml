@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aws-ebs-csi-driver
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - {{ include "argocd.finalizer" . }}
+spec:
+  project: platform
+  sources:
+    - repoURL: {{ required "helmRepoUrl is required" .Values.helmRepoUrl | quote }}
+      targetRevision: {{ .Values.targetRevision | quote }}
+      ref: values
+    - repoURL: {{ .Values.charts.ebsCsi.repo | quote }}
+      chart: {{ .Values.charts.ebsCsi.name | quote }}
+      targetRevision: {{ .Values.charts.ebsCsi.version | quote }}
+      helm:
+        valueFiles:
+          - $values/platform-values/aws-ebs-csi-driver/values.yaml
+          - $values/platform-values/aws-ebs-csi-driver/{{ include "argocd.dynamicValuesFile" . }}
+  destination:
+    server: {{ .Values.clusterServer | quote }}
+    namespace: kube-system
+  syncPolicy:
+    {{ include "argocd.automatedSyncPolicy" . | nindent 4 }}
+    syncOptions:
+      - ServerSideApply=true

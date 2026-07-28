@@ -1,0 +1,103 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - |
+        if [ "$USE_EKS" = "false" ]; then
+          echo "USE_EKS=false detected. Skipping ArgoCD bootstrap."
+          exit 0
+        fi
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        mv kubectl /usr/local/bin/kubectl
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        pip install pyyaml
+        apt-get update && apt-get install -y jq git
+  pre_build:
+    commands:
+      - |
+        if [ "$USE_EKS" = "false" ]; then
+          echo "USE_EKS=false detected. Skipping ArgoCD bootstrap."
+          exit 0
+        fi
+        aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
+  build:
+    commands:
+      - |
+        if [ "$USE_EKS" = "false" ]; then
+          echo "USE_EKS=false detected. Skipping ArgoCD bootstrap."
+          exit 0
+        fi
+
+        export NAMESPACE="${PROJECT_NAME}-${ENVIRONMENT}"
+        export HELM_REPO_URL="https://github.com/${GITHUB_USERNAME}/${PROJECT_NAME}-helm"
+        export HELM_REPO_SLUG="${GITHUB_USERNAME}/${PROJECT_NAME}-helm"
+        WORKDIR="/tmp/helm-repo"
+
+        if [ -n "${GITHUB_TOKEN:-}" ]; then
+          git clone "https://${GITHUB_TOKEN}@github.com/${HELM_REPO_SLUG}.git" "${WORKDIR}"
+        else
+          cp -a "${CODEBUILD_SRC_DIR}" "${WORKDIR}"
+        fi
+
+        cp "$CODEBUILD_SRC_DIR_tf_apply_output/tf_outputs.json" "${WORKDIR}/"
+        cd "${WORKDIR}"
+        python3 values-gen.py --out-dir=.
+
+        if [ -n "${GITHUB_TOKEN:-}" ]; then
+          git config user.email "ci@${DOMAIN_NAME}"
+          git config user.name "Fancia CI"
+          git add \
+            "main-chart/values-${ENVIRONMENT}.yaml" \
+            "platform-values/*/values-${ENVIRONMENT}.yaml" \
+            "argocd/values-${ENVIRONMENT}.yaml" \
+            "argocd-values-${ENVIRONMENT}.yaml"
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(argocd): sync dynamic helm values from terraform outputs [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "No generated value changes to commit."
+          fi
+        else
+          echo "GITHUB_TOKEN not set; skipping git commit of generated values."
+        fi
+
+        helm repo add argo https://argoproj.github.io/argo-helm
+        helm repo update
+        helm upgrade --install argocd argo/argo-cd \
+          --namespace argocd \
+          --create-namespace \
+          --values argocd-values.yaml \
+          --values "argocd-values-${ENVIRONMENT}.yaml" \
+          --wait \
+          --timeout 10m
+
+        if [ -n "${GITHUB_TOKEN:-}" ]; then
+          kubectl create secret generic fanci-helm-repo \
+            -n argocd \
+            --from-literal=type=git \
+            --from-literal=url="${HELM_REPO_URL}" \
+            --from-literal=username=git \
+            --from-literal=password="${GITHUB_TOKEN}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl label secret fanci-helm-repo -n argocd argocd.argoproj.io/secret-type=repository --overwrite
+        fi
+
+        helm template argocd ./argocd \
+          --values argocd/values.yaml \
+          --values "argocd/values-${ENVIRONMENT}.yaml" \
+          | kubectl apply -f -
+
+        echo "Waiting for ArgoCD root application to sync..."
+        for i in $(seq 1 60); do
+          STATUS=$(kubectl get application root -n argocd -o jsonpath='{.status.sync.status}' 2>/dev/null || echo "Missing")
+          HEALTH=$(kubectl get application root -n argocd -o jsonpath='{.status.health.status}' 2>/dev/null || echo "Missing")
+          echo "root sync=${STATUS} health=${HEALTH}"
+          if [ "$STATUS" = "Synced" ] && [ "$HEALTH" = "Healthy" ]; then
+            break
+          fi
+          sleep 20
+        done
+
+        kubectl get applications -n argocd

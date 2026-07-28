@@ -1,0 +1,48 @@
+targetRevision: main
+clusterServer: https://kubernetes.default.svc
+
+charts:
+  externalSecrets:
+    repo: https://charts.external-secrets.io
+    name: external-secrets
+    version: 0.11.2
+  albController:
+    repo: https://aws.github.io/eks-charts
+    name: aws-load-balancer-controller
+    version: 1.8.2
+  certManager:
+    repo: https://charts.jetstack.io
+    name: cert-manager
+    version: v1.16.2
+  awsPrivateCaIssuer:
+    repo: https://cert-manager.github.io/aws-privateca-issuer
+    name: aws-privateca-issuer
+    version: 1.4.0
+  strimzi:
+    repo: https://strimzi.io/charts
+    name: strimzi-kafka-operator
+    version: 0.45.0
+  ebsCsi:
+    repo: https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+    name: aws-ebs-csi-driver
+    version: 2.37.0
+  externalDns:
+    repo: https://kubernetes-sigs.github.io/external-dns
+    name: external-dns
+    version: 1.15.0
+  monitoring:
+    repo: https://prometheus-community.github.io/helm-charts
+    name: kube-prometheus-stack
+    version: 65.1.1
+  loki:
+    repo: https://grafana-community.github.io/helm-charts
+    name: loki
+    version: 6.24.0
+  alloy:
+    repo: https://grafana.github.io/helm-charts
+    name: alloy
+    version: 1.7.0
+  keda:
+    repo: https://kedacore.github.io/charts
+    name: keda
+    version: 2.16.0

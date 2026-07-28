@@ -1,0 +1,4 @@
+serviceAccount:
+  create: true
+  name: aws-load-balancer-controller
+region: eu-west-2
